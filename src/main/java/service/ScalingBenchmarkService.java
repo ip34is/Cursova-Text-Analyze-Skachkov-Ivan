@@ -8,6 +8,13 @@ public class ScalingBenchmarkService {
             int maxThreads,
             java.util.function.IntFunction<Runnable> taskFactory
     ) {
+        System.out.println("Прогрів JVM (Warm-up).");
+        Runnable warmupTask = taskFactory.apply(maxThreads);
+        for (int i = 0; i < 2; i++) {
+            warmupTask.run();
+        }
+        System.out.println("Прогрів завершено.\n");
+
         Map<Integer, Double> results = new LinkedHashMap<>();
 
         int threads = 1;
@@ -29,7 +36,7 @@ public class ScalingBenchmarkService {
 
         Runnable task = factory.apply(threads);
 
-        int runs = 5;
+        int runs = 10;
         long total = 0;
 
         for (int i = 0; i < runs; i++) {
@@ -42,13 +49,16 @@ public class ScalingBenchmarkService {
         double ms = (total / runs) / 1_000_000.0;
 
         results.put(threads, ms);
-        System.out.println("Threads " + threads + ": " + ms + " ms");
+        System.out.println("Відпрацьовано для потоків: " + threads + " (Середній час: " + String.format("%.2f", ms) + " ms)");
     }
 
     public void printSpeedup(Map<Integer, Double> times) {
         double t1 = times.get(1);
 
-        System.out.println("\nSpeedup:");
+        System.out.println("Результати масштабування багатопотоковості (Scaling Benchmark)");
+        System.out.println("!!!===================================================================!!!");
+        System.out.printf("%-10s | %-12s | %-20s | %-15s%n", "Потоки", "Час (ms)", "Прискорення (S)", "Ефективність (E)");
+        System.out.println("-------------------------------------------------------------------");
 
         for (var e : times.entrySet()) {
             int p = e.getKey();
@@ -58,9 +68,10 @@ public class ScalingBenchmarkService {
             double efficiency = speedup / p;
 
             System.out.printf(
-                    "p=%d | S=%.2f | E=%.2f%n",
-                    p, speedup, efficiency
+                    "%-10d | %-12.2f | %-20.2fx | %.2f%%%n",
+                    p, tp, speedup, efficiency * 100
             );
         }
+        System.out.println("!!!===================================================================!!!");
     }
 }

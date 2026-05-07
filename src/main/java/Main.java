@@ -4,7 +4,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        String folder = "data";
+        String folder = "dataset";
 
         PlagiarismService core =
                 new PlagiarismService(4, 0.6);
