@@ -1,34 +1,39 @@
-import service.*;
+import service.PlagiarismService;
+import service.ParallelComparisonService;
+import service.ScalingBenchmarkService;
 
 public class Main {
-
     public static void main(String[] args) {
+        PlagiarismService plagiarismService = new PlagiarismService(5, 0.6);
+        ScalingBenchmarkService benchmarkService = new ScalingBenchmarkService();
+        int maxThreads = Runtime.getRuntime().availableProcessors();
 
-        String folder = "dataset";
+        String[] datasets = {
+                "datasets/dataset_small",
+                "datasets/dataset_medium",
+                "datasets/dataset_large"
+        };
 
-        PlagiarismService core =
-                new PlagiarismService(4, 0.6);
+        for (String datasetPath : datasets) {
+            System.out.println(" АНАЛІЗ ДАТАСЕТУ: " + datasetPath.toUpperCase());
 
-        int maxThreads =
-                Runtime.getRuntime().availableProcessors();
+            System.out.println("Пошук плагіату (Демонстрація)");
+            ParallelComparisonService demoService = new ParallelComparisonService(plagiarismService, maxThreads);
 
-        ScalingBenchmarkService scaling =
-                new ScalingBenchmarkService();
+            try {
+                demoService.compareFolder(datasetPath, true);
+            } catch (Exception e) {
+                System.out.println("Папка " + datasetPath + " не знайдена.");
+                continue;
+            }
 
-        var results = scaling.runScalingTest(
-                maxThreads,
-                (threads) -> {
+            System.out.println("\nЗапуск бенчмарку продуктивності");
+            var results = benchmarkService.runScalingTest(maxThreads, threads -> () -> {
+                ParallelComparisonService taskService = new ParallelComparisonService(plagiarismService, threads);
+                taskService.compareFolder(datasetPath, false);
+            });
 
-                    if (threads == 1) {
-                        var seq = new SequentialComparisonService(core);
-                        return () -> seq.compareFolder(folder);
-                    } else {
-                        var par = new ParallelComparisonService(core, threads);
-                        return () -> par.compareFolder(folder);
-                    }
-                }
-        );
-
-        scaling.printSpeedup(results);
+            benchmarkService.printSpeedup(results);
+        }
     }
 }

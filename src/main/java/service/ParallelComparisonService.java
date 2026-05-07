@@ -16,7 +16,7 @@ public class ParallelComparisonService {
         this.threads = threads;
     }
 
-    public void compareFolder(String folderPath) {
+    public void compareFolder(String folderPath, boolean printResults) {
         List<Path> files = load(folderPath);
 
         ExecutorService pool = Executors.newFixedThreadPool(threads);
@@ -31,7 +31,12 @@ public class ParallelComparisonService {
                     String t1 = FileLoader.readFile(f1);
                     String t2 = FileLoader.readFile(f2);
 
-                    service.checkSimilarity(t1, t2);
+                    double similarity = service.checkSimilarity(t1, t2);
+
+                    if (printResults && similarity >= 0.6) {
+                        System.out.printf("Плагіат: [%s] - [%s] \nСхожість: %.1f%%%n",
+                                f1.getFileName(), f2.getFileName(), similarity * 100);
+                    }
                 });
             }
         }
