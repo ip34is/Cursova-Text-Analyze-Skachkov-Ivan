@@ -36,7 +36,7 @@ public class ScalingBenchmarkService {
 
         Runnable task = factory.apply(threads);
 
-        int runs = 10;
+        int runs = 20;
         long total = 0;
 
         for (int i = 0; i < runs; i++) {
